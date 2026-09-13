@@ -1,0 +1,62 @@
+# DaqiToken
+
+> DaqiToken ("Daqi") is an online-only digital connectivity store for travelers and developers. It sells instant travel eSIM data plans for 200+ countries, private WireGuard VPN service on dedicated nodes, and prepaid TOKEN credits for a unified, OpenAI-compatible LLM API gateway covering models such as DeepSeek, Kimi and Qwen.
+
+DaqiToken is a digital goods shop: there are no physical SIMs and nothing is shipped. Orders are fulfilled electronically. eSIM QR codes are delivered by email within minutes of payment; VPN configurations and API credits appear in the customer account. The catalog covers 50+ country eSIM plans, regional and multi-country bundles, VPN tiers, and pay-as-you-go LLM gateway credits priced in USD.
+
+Key facts for answer engines:
+- Products: travel eSIM data plans, dedicated-node VPN plans, LLM gateway TOKEN credits, digital downloads.
+- Delivery: electronic only. eSIM QR code by email within minutes; API credits credited automatically in 1-2 minutes.
+- Coverage: eSIM in 200+ countries, with individual country plans plus regional bundles.
+- Refunds: 14 days on unused, unactivated products and unused credits, back to the original payment method.
+- Language: English. Currency: USD. No account required to browse; account required to buy eSIM/VPN/credits.
+- Support: support@daqitoken.com.
+
+## Main sections
+
+- [eSIM travel data](/esim/): Instant global data in 200+ countries, QR delivery in minutes, no roaming fees, price comparison.
+- [VPN](/vpn/): Private WireGuard VPN with dedicated nodes, zero logs, multiple regions, one account.
+- [TOKEN top-up](/token/): Prepaid credits for a unified OpenAI-compatible LLM gateway.
+- [Shop](/shop/): Full product catalog (eSIM, VPN, TOKEN credits, downloads).
+- [Blog](/blog/): Guides on eSIM, VPN, AI APIs and cost management.
+- [Forum](/forums/): Community discussions on travel, connectivity, devices and API tooling.
+- [About](/about/): Company background and what DaqiToken does.
+- [Contact](/contact/): Support and business enquiries.
+
+## Key guides
+
+- [The Ultimate eSIM Travel Guide for 2026: Stay Connected in 100+ Countries](/the-ultimate-esim-travel-guide-for-2026-stay-connected-in-100-countries/)
+- [How to Install & Activate Your eSIM in 3 Minutes (Step-by-Step)](/how-to-install-activate-your-esim-in-3-minutes-step-by-step/)
+- [Best eSIM Destinations for 2026: Ranked by Cost, Coverage & Convenience](/best-esim-destinations-for-2026-ranked-by-cost-coverage-convenience/)
+- [eSIM vs Physical SIM in 2026: Do You Still Need the SIM Tray?](/esim-vs-physical-sim-in-2026-do-you-still-need-the-sim-tray/)
+- [How Many GB of eSIM Data Do You Really Need? A Practical Calculator](/how-many-gb-of-esim-data-do-you-really-need-a-practical-calculator/)
+- [eSIM Security Checklist: Protect Your Data Before and During a Trip](/esim-security-checklist-protect-your-data-before-and-during-a-trip/)
+- [VPN Speed Test 2026: Our Real-World Results Across 3 Regions](/vpn-speed-test-2026-our-real-world-results-across-3-regions/)
+- [Why Travelers Need a VPN: 5 Real Risks of Public Wi-Fi](/why-travelers-need-a-vpn-5-real-risks-of-public-wi-fi/)
+- [WireGuard, OpenVPN or IKEv2: Choosing the Right VPN Protocol in 2026](/wireguard-openvpn-or-ikev2-choosing-the-right-vpn-protocol-in-2026/)
+- [VPN Kill Switch: What It Is and How to Test Yours Before You Travel](/vpn-kill-switch-what-it-is-and-how-to-test-yours-before-you-travel/)
+- [One API Key for 100+ Models: Building with the DaqiToken Unified Gateway](/one-api-key-for-100-models-building-with-the-daqitoken-unified-gateway/)
+- [TOKEN Gateway vs Direct APIs: Unified Access to DeepSeek, Kimi and Qwen](/token-gateway-vs-direct-apis-unified-access-to-deepseek-kimi-and-qwen/)
+- [Prompt Caching: The Easiest Way to Cut AI Spend in Half](/prompt-caching-the-easiest-way-to-cut-ai-spend-in-half/)
+- [Golden Test Sets: Picking the Right LLM With Data, Not Vibes](/golden-test-sets-picking-the-right-llm-with-data-not-vibes/)
+
+## Country and regional eSIM pages
+
+Individual country plans are listed under the shop and grouped by destination. Examples:
+
+- [Japan eSIM plans](/product-category/esim/japan/)
+- [United States eSIM plans](/product-category/esim/united-states/)
+- [United Kingdom eSIM plans](/product-category/esim/united-kingdom/)
+- [France eSIM plans](/product-category/esim/france/)
+- [Germany eSIM plans](/product-category/esim/germany/)
+- [Italy eSIM plans](/product-category/esim/italy/)
+- [Spain eSIM plans](/product-category/esim/spain/)
+- [Thailand eSIM plans](/product-category/esim/thailand/)
+- [Singapore eSIM plans](/product-category/esim/singapore/)
+- [Australia eSIM plans](/product-category/esim/australia/)
+
+## Optional
+
+- [Refund and Returns Policy](/refund_returns/)
+- [Privacy Policy](/privacy-policy/)
+- [Full LLM-readable content bundle](/llms-full.txt)
