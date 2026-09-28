@@ -38,8 +38,10 @@ final class DaqiToken_SEO_GEO
     public static function boot(): void
     {
         add_filter('robots_txt', [self::class, 'robotsTxt'], 20, 2);
+        add_filter('wp_robots', [self::class, 'robotsMeta'], 20);
         add_filter('wpseo_schema_graph', [self::class, 'schemaGraph'], 20, 2);
         add_filter('wpseo_metadesc', [self::class, 'metaDescFallback'], 20);
+        add_filter('wpseo_title', [self::class, 'titleFallback'], 20);
         add_shortcode('daqitoken_destinations', [self::class, 'destinationsShortcode']);
         add_filter('wpseo_schema_graph', [self::class, 'destinationsSchema'], 21, 2);
     }
@@ -54,12 +56,39 @@ final class DaqiToken_SEO_GEO
         if (!$public) {
             return $output;
         }
-        $out = rtrim((string) $output) . "\n\n";
+        $out = (string) $output;
+
+        // Inject transactional / thin-path rules into the primary "*" group
+        // (directives attach to the most recent User-agent line, so they must
+        // live inside that group, not at the end of the file).
+        $extra = "Disallow: /?s=\n"
+            . "Disallow: /search/\n"
+            . "Disallow: /cart/\n"
+            . "Disallow: /checkout/\n"
+            . "Disallow: /my-account/\n"
+            . "Disallow: /wc-api/\n";
+        $out = preg_replace('/^User-agent:\s*\*\s*$/mi', "User-agent: *\n" . $extra, $out, 1);
+
+        $out = rtrim($out) . "\n\n";
         $out .= "# AI / answer-engine crawlers explicitly allowed\n";
         foreach (self::AI_BOTS as $bot) {
             $out .= "User-agent: {$bot}\nAllow: /\n\n";
         }
         return rtrim($out) . "\n";
+    }
+
+    /**
+     * Keep internal search result pages out of the index (thin, duplicate
+     * content). Complements the robots.txt disallow because external links
+     * and cached URLs can still expose them.
+     */
+    public static function robotsMeta($robots)
+    {
+        if (is_search()) {
+            $robots['noindex'] = true;
+            $robots['follow'] = true;
+        }
+        return $robots;
     }
 
     /**
@@ -96,6 +125,9 @@ final class DaqiToken_SEO_GEO
                 '@type' => 'Place',
                 'name'  => 'Worldwide',
             ];
+            if (empty($node['description'])) {
+                $node['description'] = 'DaqiToken is an online-only digital connectivity store selling instant travel eSIM data plans for 200+ countries, private WireGuard VPN service on dedicated nodes, and prepaid TOKEN credits for a unified OpenAI-compatible LLM API gateway.';
+            }
             $graph[$index] = $node;
         }
         return $graph;
@@ -159,6 +191,40 @@ final class DaqiToken_SEO_GEO
         }
 
         return $desc;
+    }
+
+    /**
+     * Replace Yoast's default "%%term_title%% Archives" titles on the
+     * categories and forum archives that carry the most search value.
+     */
+    public static function titleFallback($title)
+    {
+        $site = get_bloginfo('name');
+
+        if (function_exists('is_product_category') && is_product_category()) {
+            $term = get_queried_object();
+            if ($term && !empty($term->slug)) {
+                if ($term->slug === 'esim') {
+                    return 'Travel eSIM Plans for 200+ Countries | ' . $site;
+                }
+                if ($term->slug === 'vpn') {
+                    return 'VPN Plans: Dedicated WireGuard Nodes | ' . $site;
+                }
+                if ($term->slug === 'token') {
+                    return 'TOKEN Credits: Unified LLM Gateway | ' . $site;
+                }
+                return $term->name . ' eSIM Plans: Coverage, Prices & Instant Delivery | ' . $site;
+            }
+        }
+
+        if (function_exists('bbp_is_forum_archive') && (bbp_is_forum_archive() || is_post_type_archive('forum'))) {
+            return 'Community Forum: eSIM, VPN & AI Questions | ' . $site;
+        }
+        if (is_post_type_archive('topic')) {
+            return 'Forum Topics & Discussions | ' . $site;
+        }
+
+        return $title;
     }
 
     /** Country product categories grouped into regions for the Destinations hub. */
