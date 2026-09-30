@@ -53,9 +53,9 @@
       "url": "<?php echo esc_url(home_url()); ?>/",
       "logo": {
         "@type": "ImageObject",
-        "url": "<?php echo esc_url(home_url()); ?>/wp-content/uploads/2026/08/og-share.png",
-        "width": 1200,
-        "height": 630
+        "url": "<?php echo esc_url(home_url()); ?>/wp-content/uploads/2026/08/daqitoken-icon.png",
+        "width": 512,
+        "height": 512
       },
       "contactPoint": {
         "@type": "ContactPoint",

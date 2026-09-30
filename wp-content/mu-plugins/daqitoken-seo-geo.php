@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: DaqiToken SEO & GEO
- * Description: Generative Engine Optimization (GEO) and on-page SEO helpers: allow AI crawlers in robots.txt, enrich Organization entity, and provide automatic meta-description fallbacks for country eSIM categories and the bbPress forum.
- * Version: 1.0.0
+ * Description: Generative Engine Optimization (GEO) and on-page SEO helpers: allow AI crawlers in robots.txt, enrich Organization entity, provide automatic meta-description fallbacks, and emit discussion/collection/product structured data for bbPress and WooCommerce.
+ * Version: 1.1.0
  * Author: DaqiToken
  */
 
@@ -44,6 +44,9 @@ final class DaqiToken_SEO_GEO
         add_filter('wpseo_title', [self::class, 'titleFallback'], 20);
         add_shortcode('daqitoken_destinations', [self::class, 'destinationsShortcode']);
         add_filter('wpseo_schema_graph', [self::class, 'destinationsSchema'], 21, 2);
+        add_filter('wpseo_schema_graph', [self::class, 'forumSchema'], 22, 2);
+        add_filter('wpseo_schema_graph', [self::class, 'schemaEnhance'], 23, 2);
+        add_filter('woocommerce_structured_data_product', [self::class, 'productStructuredData'], 30, 2);
     }
 
     /**
@@ -127,6 +130,19 @@ final class DaqiToken_SEO_GEO
             ];
             if (empty($node['description'])) {
                 $node['description'] = 'DaqiToken is an online-only digital connectivity store selling instant travel eSIM data plans for 200+ countries, private WireGuard VPN service on dedicated nodes, and prepaid TOKEN credits for a unified OpenAI-compatible LLM API gateway.';
+            }
+            // Prefer the square site icon (512x512) as the Organization logo;
+            // a wide social-share banner is not a suitable logo asset.
+            if (function_exists('get_site_icon_url')) {
+                $icon = get_site_icon_url(512);
+                if ($icon) {
+                    $node['logo'] = [
+                        '@type'  => 'ImageObject',
+                        'url'    => $icon,
+                        'width'  => 512,
+                        'height' => 512,
+                    ];
+                }
             }
             $graph[$index] = $node;
         }
@@ -328,6 +344,249 @@ final class DaqiToken_SEO_GEO
             ];
         }
         return $graph;
+    }
+
+    /**
+     * Emit discussion / collection structured data for bbPress so answer
+     * engines can parse forum threads and forum hubs. Topics become
+     * DiscussionForumPosting nodes (with their replies as comments); forum
+     * archives and single forums become CollectionPage nodes with an ItemList.
+     */
+    public static function forumSchema($graph, $context = null)
+    {
+        if (!is_array($graph)) {
+            return $graph;
+        }
+
+        if (function_exists('bbp_is_single_topic') && bbp_is_single_topic()) {
+            $topic = get_queried_object();
+            if ($topic instanceof WP_Post) {
+                $url = get_permalink($topic);
+                $author = function_exists('bbp_get_topic_author_display_name')
+                    ? bbp_get_topic_author_display_name($topic->ID)
+                    : get_the_author_meta('display_name', $topic->post_author);
+
+                $node = [
+                    '@type'           => 'DiscussionForumPosting',
+                    '@id'             => $url . '#discussion',
+                    'url'             => $url,
+                    'headline'        => wp_strip_all_tags(get_the_title($topic)),
+                    'datePublished'   => get_post_time('c', true, $topic),
+                    'dateModified'    => get_post_modified_time('c', true, $topic),
+                    'text'            => self::trimText($topic->post_content, 5000),
+                    'author'          => ['@type' => 'Person', 'name' => $author],
+                    'isPartOf'        => ['@id' => $url . '#webpage'],
+                ];
+
+                $replyCount = function_exists('bbp_get_topic_reply_count') ? (int) bbp_get_topic_reply_count($topic->ID) : 0;
+                $node['interactionStatistic'] = [[
+                    '@type'               => 'InteractionCounter',
+                    'interactionType'     => ['@type' => 'CommentAction'],
+                    'userInteractionCount' => $replyCount,
+                ]];
+
+                $comments = self::topicComments($topic->ID);
+                if ($comments) {
+                    $node['comment'] = $comments;
+                }
+
+                $graph[] = $node;
+            }
+            return $graph;
+        }
+
+        $isForumArchive = function_exists('bbp_is_forum_archive')
+            && (bbp_is_forum_archive() || is_post_type_archive('forum'));
+        $isSingleForum = function_exists('bbp_is_single_forum') && bbp_is_single_forum();
+        if (!$isForumArchive && !$isSingleForum) {
+            return $graph;
+        }
+
+        $items = [];
+        $pos = 1;
+        if ($isSingleForum) {
+            $forum = get_queried_object();
+            $topics = $forum instanceof WP_Post ? get_posts([
+                'post_type'   => 'topic',
+                'post_parent' => $forum->ID,
+                'post_status' => 'publish',
+                'numberposts' => 50,
+                'orderby'     => 'modified',
+                'order'       => 'DESC',
+            ]) : [];
+            foreach ($topics as $t) {
+                $items[] = [
+                    '@type'    => 'ListItem',
+                    'position' => $pos++,
+                    'name'     => wp_strip_all_tags(get_the_title($t)),
+                    'url'      => get_permalink($t),
+                ];
+            }
+        } else {
+            $forums = get_posts([
+                'post_type'   => 'forum',
+                'post_status' => 'publish',
+                'numberposts' => -1,
+                'orderby'     => 'menu_order title',
+                'order'       => 'ASC',
+            ]);
+            foreach ($forums as $f) {
+                $items[] = [
+                    '@type'    => 'ListItem',
+                    'position' => $pos++,
+                    'name'     => wp_strip_all_tags(get_the_title($f)),
+                    'url'      => get_permalink($f),
+                ];
+            }
+        }
+
+        foreach ($graph as $i => $n) {
+            if (empty($n['@type'])) {
+                continue;
+            }
+            $types = (array) $n['@type'];
+            if (!in_array('WebPage', $types, true) && !in_array('CollectionPage', $types, true)) {
+                continue;
+            }
+            $graph[$i]['@type'] = array_values(array_unique(array_merge($types, ['CollectionPage'])));
+            if ($items) {
+                $graph[$i]['mainEntity'] = [
+                    '@type'           => 'ItemList',
+                    'numberOfItems'   => count($items),
+                    'itemListElement' => $items,
+                ];
+            }
+            break;
+        }
+
+        return $graph;
+    }
+
+    /**
+     * Cross-cutting schema enrichment: sitelinks SearchAction on the WebSite
+     * node and product offer completeness (brand, item condition, return
+     * policy) for Google merchant listings.
+     */
+    public static function schemaEnhance($graph, $context = null)
+    {
+        if (!is_array($graph)) {
+            return $graph;
+        }
+        $home = untrailingslashit(home_url());
+
+        foreach ($graph as $i => $n) {
+            if (empty($n['@type'])) {
+                continue;
+            }
+            $types = (array) $n['@type'];
+
+            if (in_array('WebSite', $types, true) && empty($n['potentialAction'])) {
+                $graph[$i]['potentialAction'] = [
+                    '@type'       => 'SearchAction',
+                    'target'      => [
+                        '@type'       => 'EntryPoint',
+                        'urlTemplate' => $home . '/?s={search_term_string}',
+                    ],
+                    'query-input' => 'required name=search_term_string',
+                ];
+            }
+
+            if (in_array('Product', $types, true)) {
+                if (empty($n['brand'])) {
+                    $graph[$i]['brand'] = ['@type' => 'Organization', 'name' => 'DaqiToken'];
+                }
+                if (!empty($n['offers']) && is_array($n['offers'])) {
+                    $offers = $n['offers'];
+                    $isList = isset($offers[0]);
+                    $offers = $isList ? $offers : [$offers];
+                    foreach ($offers as $k => $o) {
+                        if (!is_array($o)) {
+                            continue;
+                        }
+                        if (empty($o['itemCondition'])) {
+                            $offers[$k]['itemCondition'] = 'https://schema.org/NewCondition';
+                        }
+                        if (empty($o['hasMerchantReturnPolicy'])) {
+                            $offers[$k]['hasMerchantReturnPolicy'] = [
+                                '@type'                 => 'MerchantReturnPolicy',
+                                'applicableCountry'     => 'US',
+                                'returnPolicyCategory'  => 'https://schema.org/MerchantReturnFiniteReturnWindow',
+                                'merchantReturnDays'    => 14,
+                            ];
+                        }
+                    }
+                    $graph[$i]['offers'] = $isList ? $offers : $offers[0];
+                }
+            }
+        }
+
+        return $graph;
+    }
+
+    /**
+     * WooCommerce product structured data: brand, item condition and a
+     * 14-day return policy so offers qualify for richer merchant listings.
+     */
+    public static function productStructuredData($markup, $product = null)
+    {
+        if (!is_array($markup) || empty($markup['@type']) || $markup['@type'] !== 'Product') {
+            return $markup;
+        }
+        if (empty($markup['brand'])) {
+            $markup['brand'] = ['@type' => 'Brand', 'name' => 'DaqiToken'];
+        }
+        if (!empty($markup['offers']) && is_array($markup['offers'])) {
+            $isList = isset($markup['offers'][0]);
+            $offers = $isList ? $markup['offers'] : [$markup['offers']];
+            foreach ($offers as $k => $o) {
+                if (!is_array($o)) {
+                    continue;
+                }
+                if (empty($o['itemCondition'])) {
+                    $offers[$k]['itemCondition'] = 'https://schema.org/NewCondition';
+                }
+                if (empty($o['hasMerchantReturnPolicy'])) {
+                    $offers[$k]['hasMerchantReturnPolicy'] = [
+                        '@type'                => 'MerchantReturnPolicy',
+                        'applicableCountry'    => 'US',
+                        'returnPolicyCategory' => 'https://schema.org/MerchantReturnFiniteReturnWindow',
+                        'merchantReturnDays'   => 14,
+                    ];
+                }
+            }
+            $markup['offers'] = $isList ? $offers : $offers[0];
+        }
+        return $markup;
+    }
+
+    /** bbPress topic replies as schema.org Comment nodes (bounded). */
+    private static function topicComments(int $topicId, int $limit = 20): array
+    {
+        $replies = get_posts([
+            'post_type'   => 'reply',
+            'post_parent' => $topicId,
+            'post_status' => 'publish',
+            'numberposts' => $limit,
+            'orderby'     => 'date',
+            'order'       => 'ASC',
+        ]);
+
+        $out = [];
+        foreach ($replies as $r) {
+            if (!$r instanceof WP_Post) {
+                continue;
+            }
+            $out[] = [
+                '@type'         => 'Comment',
+                'text'          => self::trimText($r->post_content, 2000),
+                'datePublished' => get_post_time('c', true, $r),
+                'author'        => [
+                    '@type' => 'Person',
+                    'name'  => get_the_author_meta('display_name', $r->post_author),
+                ],
+            ];
+        }
+        return $out;
     }
 
     private static function minCategoryPrice(int $termId): float
