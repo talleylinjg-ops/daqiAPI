@@ -11,7 +11,7 @@ get_header();
 		<div class="container">
 
 			<section style="padding-bottom:24px">
-				<h2 class="section-title" style="text-align:left;margin-bottom:4px">Blog</h2>
+				<h1 class="section-title" style="text-align:left;margin-bottom:4px"><?php echo esc_html(get_the_title(get_option('page_for_posts')) ?: 'Blog'); ?></h1>
 				<p class="section-sub" style="text-align:left">Guides, tutorials and tips for getting the most out of your API credits — plus eSIM travel guides and VPN privacy setups.</p>
 			</section>
 

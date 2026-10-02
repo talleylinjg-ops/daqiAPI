@@ -41,6 +41,8 @@ final class DaqiToken_SEO_GEO
         add_filter('wp_robots', [self::class, 'robotsMeta'], 20);
         add_filter('wpseo_schema_graph', [self::class, 'schemaGraph'], 20, 2);
         add_filter('wpseo_metadesc', [self::class, 'metaDescFallback'], 20);
+        add_filter('wpseo_opengraph_desc', [self::class, 'metaDescFallback'], 20);
+        add_filter('wpseo_twitter_description', [self::class, 'metaDescFallback'], 20);
         add_filter('wpseo_title', [self::class, 'titleFallback'], 20);
         add_shortcode('daqitoken_destinations', [self::class, 'destinationsShortcode']);
         add_filter('wpseo_schema_graph', [self::class, 'destinationsSchema'], 21, 2);
@@ -157,7 +159,10 @@ final class DaqiToken_SEO_GEO
     {
         $desc = is_string($desc) ? trim($desc) : '';
         if ($desc !== '') {
-            return $desc;
+            // Yoast can emit long, auto-generated descriptions (term or first
+            // paragraph). Cap every non-empty description at a snippet-safe
+            // length so meta, OpenGraph and Twitter stay within limits.
+            return self::trimText($desc, 158);
         }
 
         // Country / product categories.
@@ -181,11 +186,11 @@ final class DaqiToken_SEO_GEO
                 }
                 $min = self::minCategoryPrice((int) $term->term_id);
                 $price = $min > 0 ? ' from $' . number_format($min, 2) : '';
-                return sprintf(
+                return self::trimText(sprintf(
                     '%1$s eSIM plans for instant data on arrival. Prepaid %1$s data%2$s, QR delivered by email in minutes, no roaming fees. Works on eSIM-compatible phones.',
                     $name,
                     $price
-                );
+                ), 158);
             }
         }
 
@@ -206,6 +211,17 @@ final class DaqiToken_SEO_GEO
             }
         }
 
+        // Static utility pages that carry no editable SEO description.
+        if (function_exists('is_page') && is_page()) {
+            $slug = get_post_field('post_name', get_queried_object_id());
+            if ($slug === 'privacy-policy') {
+                return self::trimText('How DaqiToken handles your data: what we collect for orders and accounts, how long we keep it, and the privacy choices available to you.', 158);
+            }
+            if ($slug === 'refund_returns') {
+                return self::trimText('DaqiToken refund and returns policy: eligibility, the 14-day window for unused digital eSIM plans, VPN subscriptions and TOKEN credits, and how to request a refund.', 158);
+            }
+        }
+
         return $desc;
     }
 
@@ -221,23 +237,32 @@ final class DaqiToken_SEO_GEO
             $term = get_queried_object();
             if ($term && !empty($term->slug)) {
                 if ($term->slug === 'esim') {
-                    return 'Travel eSIM Plans for 200+ Countries | ' . $site;
+                    $title = 'Travel eSIM Plans for 200+ Countries | ' . $site;
+                } elseif ($term->slug === 'vpn') {
+                    $title = 'VPN Plans: Dedicated WireGuard Nodes | ' . $site;
+                } elseif ($term->slug === 'token') {
+                    $title = 'TOKEN Credits: Unified LLM Gateway | ' . $site;
+                } else {
+                    $title = $term->name . ' eSIM Plans: Prices & Coverage | ' . $site;
                 }
-                if ($term->slug === 'vpn') {
-                    return 'VPN Plans: Dedicated WireGuard Nodes | ' . $site;
-                }
-                if ($term->slug === 'token') {
-                    return 'TOKEN Credits: Unified LLM Gateway | ' . $site;
-                }
-                return $term->name . ' eSIM Plans: Coverage, Prices & Instant Delivery | ' . $site;
             }
+        } elseif (function_exists('bbp_is_forum_archive') && (bbp_is_forum_archive() || is_post_type_archive('forum'))) {
+            $title = 'Community Forum: eSIM, VPN & AI Questions | ' . $site;
+        } elseif (is_post_type_archive('topic')) {
+            $title = 'Forum Topics & Discussions | ' . $site;
         }
 
-        if (function_exists('bbp_is_forum_archive') && (bbp_is_forum_archive() || is_post_type_archive('forum'))) {
-            return 'Community Forum: eSIM, VPN & AI Questions | ' . $site;
-        }
-        if (is_post_type_archive('topic')) {
-            return 'Forum Topics & Discussions | ' . $site;
+        // Drop the trailing brand suffix on over-long titles so the keyword
+        // part fits a SERP snippet. Short titles keep the brand for
+        // attribution in answer-engine results.
+        if (function_exists('mb_strlen') && mb_strlen($title) > 60) {
+            foreach ([' | ', ' – ', ' — ', ' - '] as $sep) {
+                $suffix = $sep . $site;
+                if (substr($title, -strlen($suffix)) === $suffix) {
+                    $title = substr($title, 0, -strlen($suffix));
+                    break;
+                }
+            }
         }
 
         return $title;
