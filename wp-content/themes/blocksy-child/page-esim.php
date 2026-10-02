@@ -11,6 +11,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <title>eSIM for Travel | DaqiToken - Instant Global Data</title>
 <meta name="description" content="Get instant mobile data in 200+ countries with our eSIM. No roaming fees, QR delivery in minutes, best price comparison across providers.">
 <link rel="canonical" href="<?php echo esc_url(home_url()); ?>/esim/">

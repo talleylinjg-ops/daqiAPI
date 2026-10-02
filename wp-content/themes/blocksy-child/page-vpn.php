@@ -11,6 +11,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <title>DaqiToken VPN | Secure &amp; Private - Your Own Network</title>
 <meta name="description" content="Private, secure VPN with your own dedicated nodes. Blazing fast WireGuard, zero logs, multiple regions, one account. Take back your privacy.">
 <link rel="canonical" href="<?php echo esc_url(home_url()); ?>/vpn/">

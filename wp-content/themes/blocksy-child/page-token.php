@@ -12,6 +12,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <title>Top Up TOKEN Credits | DaqiToken - Unified LLM Gateway</title>
 <meta name="description" content="Buy TOKEN credits for the unified LLM gateway. Simple prepaid packages, instant credit after payment. Access OpenAI, Anthropic, and more through one API.">
 <link rel="canonical" href="<?php echo esc_url(home_url()); ?>/token/">

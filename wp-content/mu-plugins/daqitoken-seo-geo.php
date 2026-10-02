@@ -49,6 +49,47 @@ final class DaqiToken_SEO_GEO
         add_filter('wpseo_schema_graph', [self::class, 'forumSchema'], 22, 2);
         add_filter('wpseo_schema_graph', [self::class, 'schemaEnhance'], 23, 2);
         add_filter('woocommerce_structured_data_product', [self::class, 'productStructuredData'], 30, 2);
+        add_filter('wpseo_canonical', [self::class, 'duplicateCanonical'], 20);
+        add_filter('wpseo_sitemap_entry', [self::class, 'excludeDuplicateFromSitemap'], 10, 3);
+    }
+
+    /**
+     * Duplicate product IDs mapped to the single canonical product. The mapped
+     * (duplicate) URL keeps returning 200 for old links but declares the
+     * canonical product and is dropped from the sitemap, so ranking signals
+     * consolidate on one URL. Pair with WooCommerce catalog visibility
+     * "hidden" and a canonical category assignment on the target product.
+     */
+    private const DUP_PRODUCT_CANONICAL = [
+        138 => 39, // japan-esim-1gb-7-days-2 -> japan-esim-1gb-7-days
+    ];
+
+    public static function duplicateCanonical($canonical)
+    {
+        if (function_exists('is_singular') && is_singular('product')) {
+            $id = get_queried_object_id();
+            if (isset(self::DUP_PRODUCT_CANONICAL[$id])) {
+                $target = get_permalink(self::DUP_PRODUCT_CANONICAL[$id]);
+                if ($target) {
+                    return $target;
+                }
+            }
+        }
+        return $canonical;
+    }
+
+    public static function excludeDuplicateFromSitemap($url, $type, $post)
+    {
+        $id = 0;
+        if (is_object($post) && isset($post->ID)) {
+            $id = (int) $post->ID;
+        } elseif (is_numeric($post)) {
+            $id = (int) $post;
+        }
+        if ($id > 0 && in_array($id, array_keys(self::DUP_PRODUCT_CANONICAL), true)) {
+            return false;
+        }
+        return $url;
     }
 
     /**
