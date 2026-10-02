@@ -54,6 +54,22 @@
       "@id": "<?php echo esc_url(home_url()); ?>/#organization",
       "name": "DaqiToken",
       "alternateName": "Daqi",
+      "slogan": "Digital life, connected.",
+      "description": "DaqiToken is an online-only digital connectivity store selling instant travel eSIM data plans for 200+ countries, private WireGuard VPN service on dedicated nodes, and prepaid TOKEN credits for a unified OpenAI-compatible LLM API gateway.",
+      "knowsAbout": [
+        "Travel eSIM",
+        "eSIM data plans",
+        "Mobile connectivity",
+        "Virtual private network",
+        "WireGuard",
+        "Large language model API gateway",
+        "AI token credits",
+        "Roaming charges"
+      ],
+      "areaServed": {
+        "@type": "Place",
+        "name": "Worldwide"
+      },
       "url": "<?php echo esc_url(home_url()); ?>/",
       "logo": {
         "@type": "ImageObject",
