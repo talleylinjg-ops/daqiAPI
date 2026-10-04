@@ -323,14 +323,46 @@ final class DaqiToken_SEO_GEO
         if (function_exists('mb_strlen') && mb_strlen($title) > 60) {
             foreach ([' | ', ' – ', ' — ', ' - '] as $sep) {
                 $suffix = $sep . $site;
-                if (substr($title, -strlen($suffix)) === $suffix) {
-                    $title = substr($title, 0, -strlen($suffix));
+                if (mb_substr($title, -mb_strlen($suffix)) === $suffix) {
+                    $title = mb_substr($title, 0, mb_strlen($title) - mb_strlen($suffix));
                     break;
                 }
+            }
+            // Content titles (posts/topics) can still exceed the SERP limit
+            // after the brand is dropped; trim to a natural boundary. The H1
+            // keeps the full title.
+            if (mb_strlen($title) > 60) {
+                $title = self::truncateTitle($title, 60);
             }
         }
 
         return $title;
+    }
+
+    /**
+     * Trim an over-long title tag to a snippet-friendly length, preferring a
+     * natural break (subtitle delimiter, else word boundary) over a hard cut.
+     * The visible H1 is unaffected. Falls back to the full string when only a
+     * tiny leading fragment could be kept.
+     */
+    private static function truncateTitle(string $title, int $max): string
+    {
+        if (mb_strlen($title) <= $max) {
+            return $title;
+        }
+        $cut = mb_substr($title, 0, $max);
+        $min = (int) floor($max * 0.55);
+        foreach ([': ', ' – ', ' — ', ' - ', ' | ', ', ', '? '] as $sep) {
+            $pos = mb_strrpos($cut, $sep);
+            if ($pos !== false && $pos >= $min) {
+                return rtrim(mb_substr($title, 0, $pos));
+            }
+        }
+        $pos = mb_strrpos($cut, ' ');
+        if ($pos !== false && $pos >= $min) {
+            return rtrim(mb_substr($title, 0, $pos));
+        }
+        return rtrim($cut);
     }
 
     /** Country product categories grouped into regions for the Destinations hub. */
