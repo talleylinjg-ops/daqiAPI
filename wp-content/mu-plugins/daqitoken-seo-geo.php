@@ -252,6 +252,18 @@ final class DaqiToken_SEO_GEO
             }
         }
 
+        // WooCommerce transactional pages (noindex) still benefit from a clean
+        // description for link previews and tooling.
+        if (function_exists('is_checkout') && is_checkout()) {
+            return self::trimText('Complete your DaqiToken order: secure checkout for travel eSIM data plans, VPN subscriptions and TOKEN credits, with instant digital delivery.', 158);
+        }
+        if (function_exists('is_cart') && is_cart()) {
+            return self::trimText('Review the items in your DaqiToken cart before checkout: travel eSIM plans, VPN subscriptions and TOKEN credits for the unified LLM gateway.', 158);
+        }
+        if (function_exists('is_account_page') && is_account_page()) {
+            return self::trimText('Manage your DaqiToken account: view orders, re-download eSIM QR codes, and track your VPN subscription and TOKEN credit balance.', 158);
+        }
+
         // Static utility pages that carry no editable SEO description.
         if (function_exists('is_page') && is_page()) {
             $slug = get_post_field('post_name', get_queried_object_id());
@@ -273,6 +285,18 @@ final class DaqiToken_SEO_GEO
     public static function titleFallback($title)
     {
         $site = get_bloginfo('name');
+
+        // Distinct, short titles for the transactional pages (Yoast otherwise
+        // gives cart and checkout near-identical titles).
+        if (function_exists('is_checkout') && is_checkout()) {
+            return 'Checkout | ' . $site;
+        }
+        if (function_exists('is_cart') && is_cart()) {
+            return 'Cart | ' . $site;
+        }
+        if (function_exists('is_account_page') && is_account_page()) {
+            return 'My Account | ' . $site;
+        }
 
         if (function_exists('is_product_category') && is_product_category()) {
             $term = get_queried_object();
