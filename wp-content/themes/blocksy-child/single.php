@@ -202,10 +202,10 @@ $date = get_the_date('Y/m/d');
 
 				<form class="comment-form" id="commentform" action="<?php echo esc_url(site_url('/wp-comments-post.php')); ?>" method="post">
 					<div class="form-row">
-						<input class="input" name="author" type="text" placeholder="Name *" maxlength="60" required>
-						<input class="input" name="email" type="email" placeholder="Email (optional)">
+						<input class="input" aria-label="Name" name="author" type="text" placeholder="Name *" maxlength="60" required>
+						<input class="input" aria-label="Email" name="email" type="email" placeholder="Email (optional)">
 					</div>
-					<textarea class="input textarea" name="comment" placeholder="Your comment..." rows="4" maxlength="1000" required></textarea>
+					<textarea class="input textarea" aria-label="Comment" name="comment" placeholder="Your comment..." rows="4" maxlength="1000" required></textarea>
 					<button class="btn-buy" type="submit" style="max-width:220px">Post comment</button>
 					<input type="hidden" name="comment_post_ID" value="<?php echo esc_attr($post_id); ?>">
 					<input type="hidden" name="comment_parent" id="comment_parent" value="0">
